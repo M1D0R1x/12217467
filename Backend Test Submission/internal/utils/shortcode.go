@@ -10,7 +10,7 @@ import (
 const (
 	// DefaultShortcodeLength is the default length for generated shortcodes
 	DefaultShortcodeLength = 6
-	
+
 	// MaxShortcodeLength is the maximum allowed length for custom shortcodes
 	MaxShortcodeLength = 12
 )
@@ -25,23 +25,23 @@ func GenerateShortcode(length int) (string, error) {
 	if length <= 0 {
 		length = DefaultShortcodeLength
 	}
-	
+
 	// Generate random bytes
 	randomBytes := make([]byte, length)
 	_, err := rand.Read(randomBytes)
 	if err != nil {
 		return "", err
 	}
-	
+
 	// Encode to base64
 	encoded := base64.URLEncoding.EncodeToString(randomBytes)
-	
+
 	// Trim to desired length and remove any non-alphanumeric characters
 	shortcode := encoded[:length]
 	shortcode = strings.ReplaceAll(shortcode, "+", "a")
 	shortcode = strings.ReplaceAll(shortcode, "/", "b")
 	shortcode = strings.ReplaceAll(shortcode, "=", "c")
-	
+
 	return shortcode, nil
 }
 
@@ -51,12 +51,12 @@ func ValidateShortcode(shortcode string) bool {
 	if shortcode == "" {
 		return false
 	}
-	
+
 	// Check if shortcode is too long
 	if len(shortcode) > MaxShortcodeLength {
 		return false
 	}
-	
+
 	// Check if shortcode contains only allowed characters
 	return ValidShortcodePattern.MatchString(shortcode)
 }

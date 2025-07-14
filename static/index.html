@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener Service</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #dff0d8;
+            border: 1px solid #d6e9c6;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            border: 1px solid #ebccd1;
+            color: #a94442;
+        }
+        .short-url {
+            font-weight: bold;
+            font-size: 18px;
+            word-break: break-all;
+        }
+        .expiry {
+            font-style: italic;
+            color: #666;
+        }
+        .instructions {
+            margin-top: 30px;
+            background-color: #e7f3fe;
+            border-left: 6px solid #2196F3;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+<h1>URL Shortener Service</h1>
+
+<div class="container">
+    <div class="form-group">
+        <label for="url">URL to Shorten:</label>
+        <input type="text" id="url" placeholder="https://example.com/very-long-url" required>
+    </div>
+
+    <div class="form-group">
+        <label for="shortcode">Custom Shortcode (Optional):</label>
+        <input type="text" id="shortcode" placeholder="e.g., mylink">
+    </div>
+
+    <div class="form-group">
+        <label for="validity">Validity Period (Minutes):</label>
+        <input type="number" id="validity" placeholder="30" value="30" min="1">
+    </div>
+
+    <button onclick="shortenURL()">Shorten URL</button>
+
+    <div id="result"></div>
+</div>
+
+<div class="instructions">
+    <h3>API Usage Instructions:</h3>
+    <p><strong>Create a Short URL:</strong></p>
+    <pre>POST /shorturls
+Content-Type: application/json
+
+{
+  "url": "https://example.com/very-long-url",
+  "validity": 30,
+  "shortcode": "custom"  // Optional
+}</pre>
+
+    <p><strong>Get URL Statistics:</strong></p>
+    <pre>GET /shorturls/{shortcode}</pre>
+
+    <p><strong>Access a Shortened URL:</strong></p>
+    <pre>GET /{shortcode}</pre>
+</div>
+
+<script>
+    function shortenURL() {
+        const url = document.getElementById('url').value;
+        const shortcode = document.getElementById('shortcode').value;
+        const validity = document.getElementById('validity').value;
+
+        if (!url) {
+            showResult('Please enter a URL to shorten.', 'error');
+            return;
+        }
+
+        const data = {
+            url: url,
+            validity: parseInt(validity)
+        };
+
+        if (shortcode) {
+            data.shortcode = shortcode;
+        }
+
+        fetch('/shorturls', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(`${err.error}: ${err.details}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                const expiryDate = new Date(data.expiry);
+                const formattedExpiry = expiryDate.toLocaleString();
+
+                let resultHTML = `
+                    <p>Your shortened URL:</p>
+                    <p class="short-url"><a href="${data.shortLink}" target="_blank">${data.shortLink}</a></p>
+                    <p class="expiry">Expires at: ${formattedExpiry}</p>
+                `;
+
+                showResult(resultHTML, 'success');
+            })
+            .catch(error => {
+                showResult(error.message, 'error');
+            });
+    }
+
+    function showResult(message, type) {
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = message;
+        resultDiv.className = type;
+        resultDiv.style.display = 'block';
+    }
+</script>
+</body>
+</html>

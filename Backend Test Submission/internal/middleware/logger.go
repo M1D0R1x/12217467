@@ -30,14 +30,14 @@ func NewLogger() *SimpleLogger {
 func (l *SimpleLogger) formatLog(level, msg string, fields map[string]interface{}) string {
 	timestamp := time.Now().Format(time.RFC3339)
 	logMsg := fmt.Sprintf("[%s] %s - %s", level, timestamp, msg)
-	
+
 	if len(fields) > 0 {
 		logMsg += " - Fields: "
 		for k, v := range fields {
 			logMsg += fmt.Sprintf("%s=%v ", k, v)
 		}
 	}
-	
+
 	return logMsg
 }
 
@@ -61,16 +61,16 @@ func LoggingMiddleware(logger Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
-			
+
 			// Create a response wrapper to capture the status code
 			rw := newResponseWriter(w)
-			
+
 			// Process the request
 			next.ServeHTTP(rw, r)
-			
+
 			// Log the request details
 			duration := time.Since(start)
-			
+
 			logger.Info("HTTP Request", map[string]interface{}{
 				"method":     r.Method,
 				"path":       r.URL.Path,
